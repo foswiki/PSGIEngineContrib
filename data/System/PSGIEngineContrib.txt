@@ -14,6 +14,11 @@ install this contrib, then the following CPAN modules, either using your package
 
 Presuming that you have your LocalSite.cfg set up to serve directly from the root of the web-server:
 
+<verbatim>
+$Foswiki::cfg{ScriptUrlPath} = '';
+$Foswiki::cfg{PubUrlPath} = '/pub';
+</verbatim>
+
 and then run =cd foswiki/bin ; plackup foswiki.psgi=
 
 ---+++ debian (testing?) / ubuntu
