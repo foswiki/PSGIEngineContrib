@@ -8,6 +8,33 @@ One line description, required for extensions repository catalog.
 
 %TOC%
 
+This foswiki contrib should make following http://foswiki.org/Support/BestPracticeTip24 simpler.
+
+install this contrib, then the following CPAN modules, either using your package management system, or =cpanm=
+
+Presuming that you have your LocalSite.cfg set up to serve directly from the root of the web-server:
+
+and then run =cd foswiki/bin ; plackup foswiki.psgi=
+
+---+++ debian (testing?) / ubuntu
+
+<verbatim>
+apt-get install libplack-perl libcgi-emulate-psgi-perl libcgi-compile-perl
+//cpanm Cwd
+//cpanm Plack::App::WrapCGI
+//cpanm Plack::Middleware::IPAddressFilter 
+</verbatim>
+
+
+---+++ cpanm
+<verbatim>
+cpanm Cwd
+cpanm Plack
+cpanm CGI::Emulate::PSGI
+cpanm Plack::App::WrapCGI
+cpanm Plack::Middleware::IPAddressFilter 
+</verbatim>
+
 ---++ Installation
 %$INSTALL_INSTRUCTIONS%
 

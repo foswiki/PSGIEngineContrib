@@ -2,3 +2,6 @@
 data/System/PSGIEngineContrib.txt 0644 Documentation page
 lib/Foswiki/Contrib/PSGIEngineContrib.pm  Perl module 
 lib/Foswiki/Contrib/PSGIEngineContrib/Config.spec 0444 Configuration
+
+bin/configure.psgi
+bin/foswiki.psgi
