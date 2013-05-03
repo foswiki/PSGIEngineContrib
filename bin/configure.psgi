@@ -26,7 +26,7 @@ BEGIN {
     #$cwd = dirname( realpath(__FILE__) );
     $cwd = dirname(__FILE__);
     
-    print STDERR "expecting to find the configure script in $cwd\n";
+    print STDERR "\n\nexpecting to find the configure script in $cwd\n";
     print STDERR "configured to require authentication user: $cfg->{config_user} with password: $cfg->{config_pass}\n\n";
     
     require "setlib.cfg";
@@ -36,6 +36,7 @@ BEGIN {
     
 $ENV{FOSWIKI_ASSERTS} = 1;
 $ENV{FOSWIKI_MONITOR} = 1;
+
     
 }
 
@@ -45,28 +46,12 @@ use Plack::App::WrapCGI;
 $ENV{PATH} = $cfg->{env_path};
 
 #configure script: standard (forked) CGI application
-my $configure = Plack::App::WrapCGI->new( script => "$cwd/configure", execute => 1)->to_app;
-
-#foswiki application - PSGI, with emulated CGI environment
-# my $configure = CGI::Emulate::PSGI->handler(sub {
-    # use CGI;
-    # use CGI::Cookie;
-    # use utf8;
-    # use Encode;
-    # #use uni::perl;
-    # CGI::initialize_globals();
-    # use CGI::Carp qw(fatalsToBrowser);
-    # $SIG{__DIE__} = \&CGI::Carp::confess;
-    
-    # use Foswiki::UI::Configure     ();
-    # Foswiki::render_configure_ui(new CGI);
-    # #run_configure();
-# });
+my $configure = Plack::App::WrapCGI->new( script => "$cwd/configure")->to_app;
 
 builder {
     enable "Runtime";
 
-    mount "/" => builder {
+    mount "/configure" => builder {
         enable "Auth::Basic", authenticator => \&authen_cb;
         #enable 'IPAddressFilter', rules => $cfg->{config_hosts};
         $ENV{AUTH_TYPE} = "BASIC";
