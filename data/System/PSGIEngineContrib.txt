@@ -44,6 +44,12 @@ cpanm CGI::Emulate::PSGI
 
 ---++ Installation
 
+---+++ Manually
+
+Put =foswiki.psgi= file to the =bin= directory of foswiki.
+
+---+++ Standard procedure
+
 %$INSTALL_INSTRUCTIONS%
 
 ---++ Security Considerations
