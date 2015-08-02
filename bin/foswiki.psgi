@@ -1,76 +1,73 @@
-#!/opt/local/bin/perl
-use strict;
-use warnings;
+#!/usr/bin/env perl
 
-our($cfg, $cwd);
-use Cwd qw(realpath);
-use File::Basename;
+use File::Spec;
 
 BEGIN {
-    ###################################
-    # Config
-    $cfg = {
-        config_user => "admin",          #auth-name for the config script (this is not use Foswiki::cfg)
-        config_pass => "change-this",    #clear-text password - the simpliest way ;( - need better handling here...
-        config_hosts => ['+ 127.0.0.1'], #hosts, allowed access the configure script
-        fwdir => "",        #name of the foswiki subdirectory. Must be in the dir, where is this script.
-
-        #$ENV{PATH} - MUST BE without writable dirs, or configure will complain (-T)
-        env_path => "/opt/local/bin:/usr/bin:/bin:/usr/local/bin",
-        #env_path => 'c:/windows/system32;c:/windows'
-        
-    };
-    ###################################
-
-    $cwd = dirname( realpath(__FILE__) );
-    
-    require "setlib.cfg";
-    die $@ if $@;
-   
-    $Foswiki::cfg{Engine} = 'Foswiki::Engine::CGI'; #ESSENTIAL - need to tell foswiki than we not running Engine::Legacy.
-    
-$ENV{FOSWIKI_ASSERTS} = 1;
-$ENV{FOSWIKI_MONITOR} = 1;
-    
+    my ( $volume, $rootDir ) = File::Spec->splitpath(__FILE__);
+    my $setlib = File::Spec->catpath( $volume, $rootDir, 'setlib.cfg' );
+    @INC = ('.', grep { $_ ne '.' } @INC) unless $rootDir;
+    require $setlib;
+    $Foswiki::cfg{Engine} = 'Foswiki::Engine::CGI';
+    $Foswiki::cfg{UseViewFile} = 0;
+    $Foswiki::cfg{ScriptSuffix} = '';
 }
 
-use Plack::Builder;
-use CGI::Emulate::PSGI;
-use Plack::App::WrapCGI;
-$ENV{PATH} = $cfg->{env_path};
+use CGI ();
+use CGI::Carp qw(fatalsToBrowser);
+use CGI::Emulate::PSGI ();
+use Foswiki ();
+use Foswiki::UI ();
 
-
-#foswiki application - PSGI, with emulated CGI environment
 my $foswiki = CGI::Emulate::PSGI->handler(sub {
-    use CGI;
-    use CGI::Cookie;
-    use utf8;
-    use Encode;
-    #use uni::perl;
     CGI::initialize_globals();
-    use CGI::Carp qw(fatalsToBrowser);
-    $SIG{__DIE__} = \&CGI::Carp::confess;
-
-    use Foswiki     ();
-    use Foswiki::UI ();
+    $Foswiki::cfg{ScriptSuffix} =~ s/\.psgi$//;
     $Foswiki::engine->run();
 });
-sub authen_cb {
-    my($username, $password) = @_;
-    return $username eq $cfg->{config_user} && $password eq $cfg->{config_pass};
-}
 
-print STDERR "\n======= cwd $Foswiki::cfg{PubDir}\n\n";
+$Foswiki::cfg{PubUrlPath} ||= '/pub';
+$Foswiki::cfg{PubUrlPath} =~ s{^(/..)+/}{/};
+
+use Crypt::PasswdMD5;
+use Plack::Builder;
+use Plack::App::WrapCGI;
 
 builder {
-    enable "Runtime";
-    enable "Plack::Middleware::Static", path => sub { s!^/pub/!! }, root => $Foswiki::cfg{PubDir};
+    mount '/' => builder {
+        enable_if { $Foswiki::cfg{PubUrlPath} } 'Plack::Middleware::Static',
+            path => qr{^$Foswiki::cfg{PubUrlPath}}, root => "$Foswiki::cfg{PubDir}/../";
 
-    my @actions = qw(view edit save rest oops
-                    attach changes compare login logon manage preview rdiff rdiffauth
-                    register rename resetpasswd search statistics upload viewauth viewfile);
-    foreach my $act (@actions) {
-        mount "/$act" => $foswiki;
-    }
-    mount '/' => $foswiki;
+        $foswiki;
+    };
+
+    mount "$Foswiki::cfg{ScriptUrlPath}/configure" => builder {
+        enable_if { $Foswiki::cfg{LoginManager} eq 'Foswiki::LoginManager::ApacheLogin' } 'Auth::Basic', authenticator => sub {
+            my($username, $password) = @_;
+            return unless $Foswiki::cfg{AdminUserLogin} and $Foswiki::cfg{Password};
+            if (my ($salt) = $Foswiki::cfg{Password} =~ /^(\$apr1\$[^\$]*\$)/) {
+                return $username eq $Foswiki::cfg{AdminUserLogin} && apache_md5_crypt($password, $salt) eq $Foswiki::cfg{Password};
+            }
+            return;
+        };
+        local $SIG{__DIE__} = \&CGI::Carp::confess;
+        Plack::App::WrapCGI->new(script => "$Foswiki::cfg{ScriptDir}/configure", execute => 1)->to_app;
+    };
 };
+
+__END__
+Foswiki - The Free and Open Source Wiki, http://foswiki.org/
+
+Copyright (C) 2008-2015 Foswiki Contributors. Foswiki Contributors
+are listed in the AUTHORS file in the root of this distribution.
+NOTE: Please extend that file, not this notice.
+
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version. For
+more details read LICENSE in the root of this distribution.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+
+As per the GPL, removal of this notice is prohibited.
