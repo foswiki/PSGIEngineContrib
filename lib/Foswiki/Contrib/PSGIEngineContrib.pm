@@ -64,7 +64,7 @@ our $VERSION = '1.0';
 #
 our $RELEASE = '1.0';
 
-our $SHORTDESCRIPTION = 'run foswiki in PSGI environment with CGI emulation layer';;
+our $SHORTDESCRIPTION = 'run foswiki in PSGI environment';
 
 1;
 

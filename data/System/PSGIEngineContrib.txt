@@ -1,6 +1,6 @@
 <!--
 One line description, required for extensions repository catalog.
-   * Set SHORTDESCRIPTION = run foswiki in PSGI environment with CGI emulation layer
+   * Set SHORTDESCRIPTION = run foswiki in PSGI environment
 -->
 ---+!! PSGIEngineContrib
 
@@ -8,51 +8,57 @@ One line description, required for extensions repository catalog.
 
 %TOC%
 
-This foswiki contrib should make following http://foswiki.org/Support/BestPracticeTip24 simpler.
+Run foswiki as PSGI application. It can be run as standalone PSGI/Plack server or it can be run with Apache or Nginx as frontend HTTP server serving static content.
 
-install this contrib, then the following CPAN modules, either using your package management system, or =cpanm=
+The foswiki can be run from any user account if PSGI server uses TCP port higher than 1023 or unix socket.
 
 Presuming that you have your LocalSite.cfg set up to serve directly from the root of the web-server:
-
 <verbatim>
 $Foswiki::cfg{ScriptUrlPath} = '';
 $Foswiki::cfg{PubUrlPath} = '/pub';
 </verbatim>
 
-and then run =cd foswiki/bin ; plackup foswiki.psgi=
-
----+++ debian (testing?) / ubuntu
+and then run
 
 <verbatim>
-apt-get install libplack-perl libcgi-emulate-psgi-perl libcgi-compile-perl
-//cpanm Cwd
-//cpanm Plack::App::WrapCGI
-//cpanm Plack::Middleware::IPAddressFilter 
+plackup bin/foswiki.psgi
 </verbatim>
 
+The foswiki will be available at =http://localhost:5000/= by default.
+
+You should use [[https://metacpan.org/release/Starman][Starman]],
+[[https://metacpan.org/release/Starlet][Starlet]] or
+[[https://metacpan.org/release/Starlight][Starlight]] server to run it on
+production site.
+
+---+++ debian (testing?) / ubuntu
+<verbatim>
+apt-get install libplack-perl libcgi-emulate-psgi-perl libcgi-compile-perl
+</verbatim>
 
 ---+++ cpanm
 <verbatim>
-cpanm Cwd
 cpanm Plack
 cpanm CGI::Emulate::PSGI
-cpanm Plack::App::WrapCGI
-cpanm Plack::Middleware::IPAddressFilter 
 </verbatim>
 
 ---++ Installation
+
 %$INSTALL_INSTRUCTIONS%
+
+---++ Security Considerations
+
+If login manager is ApacheLogin, the AdminUserLogin and Password should
+be set to protect =/configure= path.
 
 ---++ Info
 
-|  Author: | SvenDowideit |
-|  Copyright &copy;: | <!-- e.g. "2011, SlobSoft Gmbh, All Rights Reserved" --> |
-|  License: | GPL ([[http://www.gnu.org/copyleft/gpl.html][GNU General Public License]]) |
+|  Author: | SvenDowideit, PiotrRoszatycki |
+|  Copyright ©: | |
+|  License: | GPL ( [[http://www.gnu.org/copyleft/gpl.html][GNU General Public License]]) |
 |  Dependencies: | %$DEPENDENCIES% |
 |  Version: | %$VERSION% |
-|  Change History: | <!-- versions below in reverse order -->&nbsp; |
-|  1.0.0 (XX Mmm 20XX): | Initial version |
+|  Change History: | <!-- versions below in reverse order --><sticky> </sticky> |
+|  1.1.0 (02 Aug 2015): | Initial version |
 |  Home: | http://foswiki.org/Extensions/%TOPIC% |
 |  Support: | http://foswiki.org/Support/%TOPIC% |
-
-
